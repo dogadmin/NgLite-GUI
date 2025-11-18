@@ -54,6 +54,7 @@ type MainWindow struct {
 	commandPanel *widgets.CommandPanelWidget
 	logViewer    *widgets.LogViewerWidget
 	fileManager  *widgets.FileManagerWidget
+	proxyPanel   *widgets.ProxyPanel
 
 	statusLabel *widget.Label
 	startBtn    *widget.Button
@@ -62,8 +63,10 @@ type MainWindow struct {
 
 func NewMainWindow(fyneApp fyne.App, app *App) *MainWindow {
 	w := fyneApp.NewWindow("NGLite Hunter - GUI")
+	// 设置最小窗口大小而非固定大小，允许用户调整
 	w.Resize(fyne.NewSize(1200, 700))
-
+	w.SetFixedSize(false) // 允许调整窗口大小
+	
 	mw := &MainWindow{
 		window: w,
 		app:    app,
@@ -93,10 +96,12 @@ func (mw *MainWindow) setupUI() {
 	mw.commandPanel = widgets.NewCommandPanelWidget(mw.app.dispatcher)
 	mw.logViewer = widgets.NewLogViewerWidget(mw.app.logger)
 	mw.fileManager = widgets.NewFileManagerWidget(mw.app.dispatcher, mw.window)
+	mw.proxyPanel = widgets.NewProxyPanel(mw.app.sessionMgr, mw.app.transport)
 
 	mw.sessionList.SetOnSelect(func(session *core.Session) {
 		mw.commandPanel.SetSession(session)
 		mw.fileManager.SetSession(session)
+		mw.proxyPanel.SetSelectedSession(session)
 		mw.app.logger.Info(fmt.Sprintf("选中会话: %s", session.PreyID))
 	})
 
@@ -105,9 +110,12 @@ func (mw *MainWindow) setupUI() {
 	tabs := container.NewAppTabs(
 		container.NewTabItem("会话控制台", mw.commandPanel),
 		container.NewTabItem("文件管理器", mw.fileManager),
+		container.NewTabItem("SOCKS5 代理", mw.proxyPanel.Build()),
 		container.NewTabItem("全局日志", mw.logViewer),
 		container.NewTabItem("配置设置", configPanel),
 	)
+	// 确保tabs可以自适应大小
+	tabs.SetTabLocation(container.TabLocationTop)
 
 	leftPanel := container.NewBorder(
 		widget.NewLabel("在线会话列表"),
@@ -117,12 +125,14 @@ func (mw *MainWindow) setupUI() {
 		mw.sessionList,
 	)
 
+	// 使用HSplit以支持手动拖动调整左右面板大小
 	split := container.NewHSplit(
 		leftPanel,
 		tabs,
 	)
-	split.SetOffset(0.25)
+	split.SetOffset(0.25) // 初始左侧占25%
 
+	// 使用Border布局确保顶部工具栏固定，主内容区域自适应
 	content := container.NewBorder(
 		container.NewVBox(toolbar, mw.statusLabel, widget.NewSeparator()),
 		nil,
@@ -159,12 +169,16 @@ func (mw *MainWindow) createConfigPanel() fyne.CanvasObject {
 		"当前配置\n传输线程: %d\n\n注意: 修改配置需要重启应用生效",
 		cfg.TransThreads,
 	))
+	infoLabel.Wrapping = fyne.TextWrapWord
 
-	return container.NewVBox(
+	// 使用Scroll容器确保内容过多时可滚动，支持窗口缩小
+	content := container.NewVBox(
 		form,
 		widget.NewSeparator(),
 		infoLabel,
 	)
+
+	return container.NewScroll(content)
 }
 
 func (mw *MainWindow) onStartListener() {

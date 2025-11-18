@@ -56,6 +56,7 @@ func NewSessionListWidget(mgr *core.SessionManager) *SessionListWidget {
 		w.Refresh()
 	})
 
+	// 布局：底部固定刷新按钮，中间会话列表自适应
 	w.container = container.NewBorder(
 		nil,
 		refreshBtn,

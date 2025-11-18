@@ -120,6 +120,7 @@ func NewFileManagerWidget(dispatcher *core.CommandDispatcher, window fyne.Window
 		uploadBtn,
 	)
 	
+	// 文件列表区域：顶部固定路径和工具栏，底部固定进度条，中间文件列表自适应
 	fileSection := container.NewBorder(
 		container.NewVBox(w.pathEntry, toolbar),
 		w.progressBar,
@@ -128,14 +129,17 @@ func NewFileManagerWidget(dispatcher *core.CommandDispatcher, window fyne.Window
 		w.fileList,
 	)
 	
+	// 输出日志区域使用Scroll确保可滚动
 	outputScroll := container.NewScroll(w.outputText)
 	
+	// 使用VSplit支持上下拖动调整文件列表和日志区域大小
 	split := container.NewVSplit(
 		fileSection,
 		outputScroll,
 	)
-	split.SetOffset(0.7)
+	split.SetOffset(0.7) // 初始文件区域占70%
 	
+	// 使用Max容器确保split填满整个区域
 	w.container = container.NewMax(split)
 	
 	w.ExtendBaseWidget(w)

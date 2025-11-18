@@ -41,8 +41,10 @@ func NewLogViewerWidget(log *logger.Logger) *LogViewerWidget {
 		w.logText.SetText("")
 	})
 
+	// 日志区域使用Scroll确保可滚动查看
 	scrollContainer := container.NewScroll(w.logText)
 
+	// 布局：底部固定清除按钮，中间日志区域自适应
 	w.container = container.NewBorder(
 		nil,
 		clearBtn,

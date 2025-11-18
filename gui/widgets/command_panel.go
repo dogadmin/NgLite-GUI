@@ -44,6 +44,7 @@ func NewCommandPanelWidget(dispatcher *core.CommandDispatcher) *CommandPanelWidg
 		w.outputText.SetText("")
 	})
 
+	// 输入栏：左边输入框自适应，右边固定按钮
 	inputBar := container.NewBorder(
 		nil,
 		nil,
@@ -52,8 +53,10 @@ func NewCommandPanelWidget(dispatcher *core.CommandDispatcher) *CommandPanelWidg
 		w.inputEntry,
 	)
 
+	// 输出区域使用Scroll确保内容过多时可以滚动
 	outputScroll := container.NewScroll(w.outputText)
 
+	// 整体布局：底部固定输入栏，中间输出区域自适应
 	w.container = container.NewBorder(
 		nil,
 		inputBar,
