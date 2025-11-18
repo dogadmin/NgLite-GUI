@@ -1,179 +1,139 @@
-# NGLite GUI 版本使用文档
+# NGLite GUI 版本
 
-原版 https://github.com/Maka8ka/NGLite。 很好的一个项目，拿来学习并且尝试改成gui做测试
+> 致敬原版：[https://github.com/Maka8ka/NGLite](https://github.com/Maka8ka/NGLite)  
+> 本项目基于原版NGLite进行学习和改进，增加了GUI界面和文件管理功能
 
-## 项目结构
+## ⚠️ 免责声明
 
-```
-NGLite-main/
-├── cmd/
-│   ├── lhunter-cli/    # CLI 控制端
-│   ├── lhunter-gui/    # GUI 控制端（新）
-│   └── lprey/          # 被控端
-├── internal/           # 核心业务逻辑（新）
-│   ├── core/          # 会话管理、命令分发
-│   ├── transport/     # NKN 通信层
-│   ├── config/        # 配置管理
-│   └── logger/        # 日志系统
-├── gui/               # GUI 组件（新）
-│   ├── widgets/       # UI 组件
-│   └── app.go         # GUI 应用入口
-├── module/            # 功能模块
-│   ├── cipher/        # 加密
-│   ├── command/       # 命令执行
-│   └── getmac/        # 主机信息
-└── conf/              # 配置常量
-```
+**本项目仅供安全研究和学习使用！**
 
-## 编译说明
+- ✅ 本工具设计用于合法的系统管理和运维工作
+- ✅ 使用前请确保获得目标系统所有者的明确授权
+- ❌ **严禁用于任何非法用途，包括但不限于未授权访问、恶意攻击、数据窃取等**
+- ❌ 使用本工具产生的一切法律后果由使用者自行承担
+- ❌ 项目作者和贡献者不对任何滥用行为负责
+
+**请遵守所在国家/地区的法律法规，合法合规使用本工具！**
+
+---
+
+## 项目简介
+
+NGLite GUI 版本是基于区块链P2P网络（NKN）的跨平台远程管理工具，支持：
+
+- 🖥️ **跨平台支持**：Windows / macOS / Linux
+- 🔒 **匿名通信**：基于NKN区块链网络，无需公网IP
+- 🎨 **图形界面**：提供现代化GUI和传统CLI两种模式
+- 📁 **文件管理**：远程浏览、上传、下载文件
+- 💻 **命令执行**：远程执行系统命令
+- 🔐 **加密传输**：RSA + AES双重加密
+
+## 编译
 
 ### 前置要求
 
 - Go 1.18+
-- Fyne 依赖（已自动安装）
+- Fyne 依赖（GUI版本需要）
 
-### 编译 CLI 版本
+### 编译所有版本
 
 ```bash
-go build -o bin/lhunter-cli ./cmd/lhunter-cli
-go build -o bin/lprey ./cmd/lprey
+# Mac/Linux 版本
+go build -o bin/lprey cmd/lprey/main.go
+go build -o bin/lhunter-gui cmd/lhunter-gui/main.go
+go build -o bin/lhunter-cli cmd/lhunter-cli/main.go
+
+# Windows 版本
+GOOS=windows GOARCH=amd64 go build -o bin/lprey.exe cmd/lprey/main.go
+GOOS=windows GOARCH=amd64 go build -o bin/lhunter-cli.exe cmd/lhunter-cli/main.go
 ```
 
-### 编译 GUI 版本
+## 快速开始
 
-#### macOS
-
-```bash
-go build -o bin/lhunter-gui ./cmd/lhunter-gui
-```
-
-#### Linux
+### 1. 生成频道 Seed
 
 ```bash
-go build -o bin/lhunter-gui ./cmd/lhunter-gui
-```
-
-#### Windows
-
-```bash
-go build -o bin/lhunter-gui.exe ./cmd/lhunter-gui
-```
-
-### 打包 GUI 应用（可选）
-
-使用 Fyne 工具打包为应用程序：
-
-```bash
-go install fyne.io/fyne/v2/cmd/fyne@latest
-
-fyne package -os darwin -name "NGLite Hunter" -src ./cmd/lhunter-gui
-fyne package -os linux -name "NGLite Hunter" -src ./cmd/lhunter-gui
-fyne package -os windows -name "NGLite Hunter" -src ./cmd/lhunter-gui
-```
-
-## 使用说明
-
-### CLI 版本使用
-
-#### 控制端（lhunter-cli）
-
-**生成新 seed：**
-```bash
+# 使用CLI生成
 ./bin/lhunter-cli -n new
+
+# 或使用GUI，点击 "New Seed" 按钮
+./bin/lhunter-gui
 ```
 
-**启动控制端：**
-```bash
-./bin/lhunter-cli -g <seed_id>
-```
-
-**发送命令：**
-```
-> aa:bb:cc:dd:ee:ff192.168.1.100 whoami
-> aa:bb:cc:dd:ee:ff192.168.1.100 pwd
-```
-
-#### 被控端（lprey）
+### 2. 启动被控端（Prey）
 
 ```bash
-./bin/lprey -g <seed_id>
+# 在被控机器上
+./bin/lprey -g <你的seed>
 ```
 
-### GUI 版本使用
+### 3. 启动控制端（Hunter）
 
-#### 启动 GUI 控制端
+#### GUI 模式（推荐）
 
 ```bash
 ./bin/lhunter-gui
 ```
 
-#### 主要功能
+1. 点击 "Start" 启动监听
+2. 等待被控端上线（左侧会话列表）
+3. 选择会话，执行命令或管理文件
 
-**1. 启动监听**
-- 点击顶部 "Start" 按钮启动监听
-- 状态栏显示 "● 监听中" 表示成功
+#### CLI 模式
 
-**2. 查看在线会话**
-- 左侧显示所有上线的客户端
-- 显示信息：PreyID、MAC、IP、OS、状态、最后上线时间
+```bash
+./bin/lhunter-cli -g <你的seed>
 
-**3. 执行命令**
-- 点击左侧会话列表选中目标
-- 右侧 "会话控制台" Tab 中输入命令
-- 点击 "Execute" 或按 Enter 执行
-- 输出区域显示命令结果
+# 交互式命令格式
+> <preyid> <命令>
+```
 
-**4. 查看日志**
-- 切换到 "全局日志" Tab
-- 查看所有系统事件（上线、命令、错误）
-- 点击 "Clear Logs" 清空日志
+## 主要功能
 
-**5. 配置管理**
-- 切换到 "配置设置" Tab
-- 查看当前配置信息
-- 点击 "New Seed" 按钮生成新频道
+### 会话管理
+- 实时显示在线被控端
+- 显示MAC地址、IP、操作系统、最后上线时间
+- 自动检测离线超时
 
-**6. 停止监听**
-- 点击 "Stop" 按钮停止监听
+### 命令执行
+- 远程执行任意系统命令
+- 实时显示命令输出
+- 命令历史保存
 
-## 功能对比
+### 文件管理
+- 远程浏览文件系统
+- 列出所有磁盘/盘符
+- 上传/下载文件（支持≤10MB）
+- 删除文件和目录
+- 文件大小显示
 
-| 功能 | CLI 版本 | GUI 版本 |
-|-----|---------|---------|
-| 生成 Seed | ✅ `-n new` | ✅ 按钮 |
-| 指定频道 | ✅ `-g <seed>` | ✅ 配置面板 |
-| 接收上线 | ✅ 日志输出 | ✅ 会话列表 |
-| 发送命令 | ✅ 命令行输入 | ✅ GUI 输入框 |
-| 查看历史 | ❌ | ✅ 输出区保留 |
-| 会话管理 | ❌ | ✅ 列表管理 |
-| 状态监控 | ❌ | ✅ 实时状态 |
-| 日志查看 | ✅ 终端输出 | ✅ 独立 Tab |
+### 全局日志
+- 记录所有操作事件
+- 实时日志查看
+- 日志清理功能
 
-## 核心逻辑重构
+## 技术特点
 
-原 `lhunter/main.go` 中的功能已拆分为：
+### 通信机制
+- 基于 NKN（New Kind of Network）区块链P2P网络
+- 约8万个分布式节点
+- 无需中心服务器
+- 无需公网IP或域名
 
-| 原功能 | 新位置 |
-|--------|-------|
-| `Huntlistener` | `internal/transport/listener.go` |
-| `BountyHunter` | `internal/core/command_dispatcher.go` |
-| Session 管理 | `internal/core/session_manager.go` |
-| NKN 客户端 | `internal/transport/nkn_client.go` |
-| 配置读取 | `internal/config/config.go` |
-| 日志系统 | `internal/logger/logger.go` |
+### 安全加密
+- RSA 2048位非对称加密（初始握手）
+- AES-CBC 256位对称加密（数据传输）
+- 防止中间人攻击
 
-CLI 和 GUI 版本共享所有核心逻辑，仅交互层不同。
+### 匿名性
+- P2P直连通信
+- 无中心服务器日志
+- 流量混淆于NKN网络
+- （注：完全匿名性取决于网络环境）
 
-## 技术栈
+## 配置说明
 
-- **语言**: Go 1.18+
-- **GUI 框架**: Fyne v2.7+
-- **P2P 通信**: NKN SDK
-- **加密**: RSA 2048 + AES-CBC 256
-
-## 配置文件
-
-GUI 版本支持通过 JSON 配置文件启动：
+GUI版本支持配置文件：
 
 ```bash
 ./bin/lhunter-gui -c config.json
@@ -182,65 +142,85 @@ GUI 版本支持通过 JSON 配置文件启动：
 **config.json 示例：**
 ```json
 {
-  "seed_id": "fa801f84020cadc6914ef9b11482b4ccaf09e5cc282e77881c38bdded436cc75",
+  "seed_id": "your_seed_here",
   "hunter_id": "monitor",
-  "aes_key": "whatswrongwithUu",
+  "aes_key": "your_aes_key",
   "trans_threads": 4
 }
 ```
 
+## 项目结构
+
+```
+NGLite/
+├── cmd/              # 命令行入口
+│   ├── lhunter-gui/ # GUI控制端
+│   ├── lhunter-cli/ # CLI控制端
+│   └── lprey/       # 被控端
+├── gui/             # GUI组件
+│   └── widgets/     # UI控件
+├── internal/        # 核心逻辑
+│   ├── core/       # 会话管理、命令分发
+│   ├── transport/  # NKN通信层
+│   ├── config/     # 配置管理
+│   └── logger/     # 日志系统
+├── module/          # 功能模块
+│   ├── cipher/     # 加密解密
+│   ├── command/    # 命令执行
+│   ├── fileops/    # 文件操作
+│   └── getmac/     # 主机信息
+└── conf/           # 配置常量
+```
+
+## 优势与劣势
+
+### ✅ 优势
+- 理论上完全匿名（除非监测所有中间节点）
+- 无需购买服务器、域名、CDN等资源
+- 无需实名认证
+- 跨平台支持
+- 免杀性能良好
+- GUI界面友好
+
+### ❌ 劣势
+- 连接较多（P2P网络特性）
+- 体积较大（可用UPX压缩）
+- 首次连接需要等待
+- 依赖网络环境
+
 ## 常见问题
 
-**Q: GUI 无法启动？**
+**Q: 被控端无法连接？**  
+A: 检查网络连接，确保能访问NKN网络节点
 
-A: 确保系统已安装图形界面支持：
-- macOS: 原生支持
-- Linux: 需要 X11 或 Wayland
-- Windows: 原生支持
+**Q: 文件上传失败？**  
+A: 目前仅支持≤10MB的文件
 
-**Q: 编译 GUI 时报错？**
+**Q: GUI无法启动？**  
+A: 确保系统支持图形界面（X11/Wayland/Quartz）
 
-A: 检查 Fyne 依赖：
-```bash
-go get fyne.io/fyne/v2@latest
-go mod tidy
-```
+**Q: 编译错误？**  
+A: 运行 `go mod tidy` 安装依赖
 
-**Q: 如何在无图形界面服务器上运行？**
+## 致谢
 
-A: 使用 CLI 版本：
-```bash
-./bin/lhunter-cli -g <seed>
-```
-
-**Q: 会话列表不刷新？**
-
-A: 会话列表每 3 秒自动刷新，也可手动点击 "刷新" 按钮
-
-**Q: 命令执行超时？**
-
-A: 默认超时 30 秒，检查：
-- 被控端是否在线
-- 网络连接是否正常
-- PreyID 是否正确
-
-## 后续开发计划
-
-- [ ] 文件传输功能
-- [ ] 端口转发/内网穿透
-- [ ] 批量命令执行
-- [ ] 命令历史记录保存
-- [ ] 会话分组管理
-- [ ] 插件系统
+- 原版项目：[Maka8ka/NGLite](https://github.com/Maka8ka/NGLite)
+- NKN 区块链网络：[https://nkn.org/](https://nkn.org/)
+- Fyne GUI 框架：[https://fyne.io/](https://fyne.io/)
 
 ## 许可证
 
-与原项目保持一致
+MIT License
 
+---
 
+## 📢 再次声明
 
+**本项目仅供学习研究，严禁用于非法用途！**
 
-------------------------------
-更新目录，支持了文件管理，socks5代理。代理感觉有点问题
-窗口自适应。
+使用本工具前请确保：
+1. ✅ 已获得目标系统所有者的明确书面授权
+2. ✅ 用途符合当地法律法规
+3. ✅ 理解并承担所有使用后果
 
+**一切违法使用产生的后果由使用者自行承担！**

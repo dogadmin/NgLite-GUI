@@ -54,7 +54,6 @@ type MainWindow struct {
 	commandPanel *widgets.CommandPanelWidget
 	logViewer    *widgets.LogViewerWidget
 	fileManager  *widgets.FileManagerWidget
-	proxyPanel   *widgets.ProxyPanel
 
 	statusLabel *widget.Label
 	startBtn    *widget.Button
@@ -96,12 +95,10 @@ func (mw *MainWindow) setupUI() {
 	mw.commandPanel = widgets.NewCommandPanelWidget(mw.app.dispatcher)
 	mw.logViewer = widgets.NewLogViewerWidget(mw.app.logger)
 	mw.fileManager = widgets.NewFileManagerWidget(mw.app.dispatcher, mw.window)
-	mw.proxyPanel = widgets.NewProxyPanel(mw.app.sessionMgr, mw.app.transport)
 
 	mw.sessionList.SetOnSelect(func(session *core.Session) {
 		mw.commandPanel.SetSession(session)
 		mw.fileManager.SetSession(session)
-		mw.proxyPanel.SetSelectedSession(session)
 		mw.app.logger.Info(fmt.Sprintf("选中会话: %s", session.PreyID))
 	})
 
@@ -110,7 +107,6 @@ func (mw *MainWindow) setupUI() {
 	tabs := container.NewAppTabs(
 		container.NewTabItem("会话控制台", mw.commandPanel),
 		container.NewTabItem("文件管理器", mw.fileManager),
-		container.NewTabItem("SOCKS5 代理", mw.proxyPanel.Build()),
 		container.NewTabItem("全局日志", mw.logViewer),
 		container.NewTabItem("配置设置", configPanel),
 	)

@@ -86,4 +86,3 @@ func generateRandomID() string {
 	ctx.Write(result)
 	return hex.EncodeToString(ctx.Sum(nil))
 }
-

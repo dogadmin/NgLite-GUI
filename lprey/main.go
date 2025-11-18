@@ -1,6 +1,7 @@
 package main
 
 import (
+	"crypto/md5"
 	"encoding/hex"
 	"flag"
 	"fmt"
@@ -31,13 +32,11 @@ func main() {
 func Preylistener(seedid string) {
 	err := func() error {
 
-
 		seed, _ := hex.DecodeString(seedid)
 		account, err := nkn.NewAccount(seed)
 		if err != nil {
 			return err
 		}
-
 
 		Listener, err := nkn.NewMultiClient(account, preyid, conf.TransThreads, false, clientConf)
 
@@ -82,8 +81,16 @@ func initonce(seedid string) {
 		SessionConfig:           nil,
 	}
 
+	// 使用GetMacAddrsClean和GetIPsClean获取标识
+	rawID := getmac.GetMacAddrsClean()[0] + getmac.GetIPsClean()[0]
 
-	preyid = getmac.GetMacAddrs()[0] + getmac.GetIPs()[0]
+	// 使用MD5哈希生成固定长度的identifier（32位十六进制）
+	// 这样可以避免NKN对identifier格式的限制
+	hash := md5.Sum([]byte(rawID))
+	preyid = hex.EncodeToString(hash[:])
+
+	fmt.Printf("[Prey] Raw ID: %s\n", rawID)
+	fmt.Printf("[Prey] PreyID (MD5): %s\n", preyid)
 
 	seed, _ := hex.DecodeString(seedid)
 	account, err := nkn.NewAccount(seed)
