@@ -92,7 +92,7 @@ func (mw *MainWindow) setupUI() {
 	mw.sessionList = widgets.NewSessionListWidget(mw.app.sessionMgr)
 	mw.commandPanel = widgets.NewCommandPanelWidget(mw.app.dispatcher)
 	mw.logViewer = widgets.NewLogViewerWidget(mw.app.logger)
-	mw.fileManager = widgets.NewFileManagerWidget(mw.app.dispatcher)
+	mw.fileManager = widgets.NewFileManagerWidget(mw.app.dispatcher, mw.window)
 
 	mw.sessionList.SetOnSelect(func(session *core.Session) {
 		mw.commandPanel.SetSession(session)

