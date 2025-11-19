@@ -4,6 +4,7 @@ go 1.24.0
 
 require (
 	fyne.io/fyne/v2 v2.7.1
+	github.com/nknorg/ncp-go v1.0.5
 	github.com/nknorg/nkn-sdk-go v1.4.8
 	golang.org/x/text v0.31.0
 )
@@ -36,7 +37,6 @@ require (
 	github.com/jsummers/gobmp v0.0.0-20230614200233-a9de23ed2e25 // indirect
 	github.com/nfnt/resize v0.0.0-20180221191011-83c6a9932646 // indirect
 	github.com/nicksnyder/go-i18n/v2 v2.5.1 // indirect
-	github.com/nknorg/ncp-go v1.0.5 // indirect
 	github.com/nknorg/nkn/v2 v2.2.1-0.20240509224846-24ade56074a3 // indirect
 	github.com/nknorg/nkngomobile v0.0.0-20220615081414-671ad1afdfa9 // indirect
 	github.com/patrickmn/go-cache v2.1.0+incompatible // indirect

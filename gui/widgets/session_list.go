@@ -66,11 +66,15 @@ func NewSessionListWidget(mgr *core.SessionManager) *SessionListWidget {
 	)
 
 	mgr.SetOnAdd(func(s *core.Session) {
-		w.Refresh()
+		go func() {
+			w.RefreshSafe()
+		}()
 	})
 
 	mgr.SetOnUpdate(func(s *core.Session) {
-		w.Refresh()
+		go func() {
+			w.RefreshSafe()
+		}()
 	})
 
 	go w.autoRefresh()
@@ -121,11 +125,19 @@ func (w *SessionListWidget) Refresh() {
 	}
 }
 
+func (w *SessionListWidget) RefreshSafe() {
+	w.sessions = w.manager.GetAllSessions()
+	if w.list != nil {
+		// Fyne v2 widgets are thread-safe, we can directly refresh
+		w.list.Refresh()
+	}
+}
+
 func (w *SessionListWidget) autoRefresh() {
 	ticker := time.NewTicker(3 * time.Second)
 	defer ticker.Stop()
 	for range ticker.C {
-		w.Refresh()
+		w.RefreshSafe()
 		w.manager.CheckTimeout(5 * time.Minute)
 	}
 }

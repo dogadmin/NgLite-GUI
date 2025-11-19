@@ -4,6 +4,7 @@ import (
 	"NGLite/internal/config"
 	"NGLite/internal/core"
 	"NGLite/internal/logger"
+	"NGLite/internal/socks5"
 	"NGLite/internal/transport"
 	"fmt"
 
@@ -11,15 +12,16 @@ import (
 )
 
 type App struct {
-	fyneApp    fyne.App
-	mainWindow *MainWindow
-	config     *config.Config
+	fyneApp     fyne.App
+	mainWindow  *MainWindow
+	config      *config.Config
 
-	sessionMgr *core.SessionManager
-	dispatcher *core.CommandDispatcher
-	transport  *transport.TransportManager
-	logger     *logger.Logger
-	listener   *transport.Listener
+	sessionMgr  *core.SessionManager
+	dispatcher  *core.CommandDispatcher
+	transport   *transport.TransportManager
+	logger      *logger.Logger
+	listener    *transport.Listener
+	socks5Mgr   *socks5.Manager
 }
 
 func NewApp(fyneApp fyne.App, cfg *config.Config) (*App, error) {
@@ -37,6 +39,7 @@ func NewApp(fyneApp fyne.App, cfg *config.Config) (*App, error) {
 	sessionMgr := core.NewSessionManager()
 	dispatcher := core.NewCommandDispatcher(tm, cfg.AESKey)
 	listener := transport.NewListener(tm)
+	socks5Manager := socks5.NewManager()
 
 	app := &App{
 		fyneApp:    fyneApp,
@@ -46,6 +49,7 @@ func NewApp(fyneApp fyne.App, cfg *config.Config) (*App, error) {
 		transport:  tm,
 		logger:     log,
 		listener:   listener,
+		socks5Mgr:  socks5Manager,
 	}
 
 	app.mainWindow = NewMainWindow(fyneApp, app)
@@ -76,4 +80,12 @@ func (a *App) GetConfig() *config.Config {
 
 func (a *App) GetListener() *transport.Listener {
 	return a.listener
+}
+
+func (a *App) GetSocks5Manager() *socks5.Manager {
+	return a.socks5Mgr
+}
+
+func (a *App) GetTransportManager() *transport.TransportManager {
+	return a.transport
 }
